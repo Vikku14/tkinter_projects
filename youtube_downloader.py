@@ -63,7 +63,7 @@ high.grid(row=0,column=1)
 low= Radiobutton(frame3,text="low",variable=v,value=0)
 low.grid(row=0,column=2)
 
-status= Label(frame4,width=60,font=("Courier", 12),textvariable=st)
+status= Label(frame4,textvariable=st,width=60,font=("Courier", 12))
 status.grid(row=1)
 
 def complete(stream, file_handle):
@@ -87,11 +87,15 @@ def download_video(path):
     else:
         video.download(path)
 
+def progress(bytes_remaining):
+    percent = int(((size - bytes_remaining)/size)*100)
+    st.set(percent)
+    print(percent)
+
 
 def processing(stream, chunk, file_handle, bytes_remaining):
     # global st
-    print(int(((size - bytes_remaining)/size)*100))
+    status.after(1000,progress(bytes_remaining))
 
-
-
+#=========================== Learn Multithreading from here ===================================================
 root.mainloop()
