@@ -7,6 +7,7 @@ import re
 from time import sleep
 import os.path
 import datetime
+import pyperclip
 import string
 from tkinter import font
 import webbrowser
@@ -16,7 +17,7 @@ from urllib import request
 from tkinter import PhotoImage
 from PIL import Image
 '''
-Created On june 2018
+Created On june-july 2018
 
 @author: Vivek Sharma 
 '''
@@ -29,7 +30,7 @@ class Idm(Tk):
     def __init__(self):
 
         super().__init__()
-        self.geometry('618x430')
+        self.geometry('622x484')
         self.title('VDM (Vikku Download manager)')
         self.resizable(width=False, height=False)
         # self.config(bg='gray95')
@@ -45,6 +46,8 @@ class Idm(Tk):
         self.video_title = ""
         self.st, self.path_variable, self.link_variable = StringVar(), StringVar(), StringVar()
         self.v = IntVar()
+        if pyperclip.paste().startswith("https://www.youtube.com/"):
+            self.link_variable.set(pyperclip.paste())
 
         self.set_image()
         self.initialize_frames()
@@ -52,26 +55,33 @@ class Idm(Tk):
         self.set_frame2_widgets()
         self.set_frame3_widgets()
         self.set_frame4_widgets()
+        self.set_frame5_widgets()
+
+        self.bind('<Button-4>', self.mouse_scroll)
+        self.bind('<Button-5>', self.mouse_scroll)
+
 
     def set_image(self):
 
-        imgicon = PhotoImage(file=os.path.join("/home/vikku", 'gif.png'))
+        imgicon = PhotoImage(file=os.path.join("/home/vikku", 'vdm.png'))
         self.tk.call('wm', 'iconphoto', self._w, imgicon)
 
     def initialize_frames(self):
 
-        self.frame1 = Frame(self, width=618, height=100, bg='gray12')
-        self.frame3 = Frame(self, width=618, height=35, bg=self.white)
-        self.frame4 = Frame(self, width=618, height=25, bg=self.black)
+        self.frame1 = Frame(self, width=622, height=120, bg='gray12')
+        self.frame3 = Frame(self, width=622, height=45, bg=self.white,bd=3,relief='raised')
+        self.frame4 = Frame(self, width=620, height=25, bg=self.black,bd=2,relief='raised')
+        self.frame5 = Frame(self, width=622, height=22, bg=self.black)
         self.frame1.grid(row=0)
-        self.frame3.grid(row=2)
-        self.frame4.grid(row=4)
+        self.frame3.grid(row=4)
+        self.frame4.grid(row=1)
+        self.frame5.grid(row=2)
         self.frame1.grid_propagate(0)
         self.frame3.grid_propagate(0)
         self.frame4.grid_propagate(0)
+        self.frame5.grid_propagate(0)
 
-        self.bind('<Button-4>', self.mouse_scroll)
-        self.bind('<Button-5>', self.mouse_scroll)
+
 
     def set_frame1_widgets(self):
 
@@ -82,9 +92,9 @@ class Idm(Tk):
         f.configure(underline=True)
         ask_path_label.configure(font=f)
         ask_path_label.bind('<Button-1>', self.changepath)
-        self.path_entry = Entry(self.frame1, width=40, bd=0, textvariable=self.path_variable)
-        self.link = Entry(self.frame1, width=40, bd=0, textvariable=self.link_variable)
-        quality_button = Button(self.frame1, text='Quality', fg=self.white, bg="gray12",
+        self.path_entry = Entry(self.frame1, width=40, bd=2, textvariable=self.path_variable,relief='sunken')
+        self.link = Entry(self.frame1, width=40, bd=2, textvariable=self.link_variable,relief='sunken')
+        quality_button = Button(self.frame1, text='Quality', fg=self.white,bg="gray12",relief='flat',
                                 command=lambda: self.quality_check())
 
         quality_button.grid(row=0, column=2, padx=48)
@@ -93,16 +103,19 @@ class Idm(Tk):
         self.link.grid(row=0, column=1, padx=5, pady=15)
         self.link.focus()
         self.link.bind('<Return>', self.down_video)
+        self.path_entry.bind('<Return>', self.down_video)
+
+
 
     def set_frame2_widgets(self):
 
-        self.canvas = Canvas(self, width=618, background="white")
+        self.canvas = Canvas(self, width=618, background="white",bd=2,relief='ridge')
         self.frame2 = Frame(self.canvas, background="lightsteelblue2", width=618)
-        vscroll = Scrollbar(self.canvas, orient="vertical", command=self.canvas.yview)
+        vscroll = Scrollbar(self.canvas, orient="vertical",bd=2,relief="groove", command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=vscroll.set)
 
         vscroll.grid(row=0, column=1, sticky="W", ipady=120)
-        self.canvas.grid(row=1, column=0, sticky=S)
+        self.canvas.grid(row=3, column=0, sticky=S)
         self.canvas.grid_propagate(0)
         self.canvas_frame = self.canvas.create_window((0, 0), window=self.frame2, anchor="nw")
         self.frame2.bind("<Configure>", lambda event, canvas=self.canvas: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
@@ -110,30 +123,32 @@ class Idm(Tk):
 
     def set_frame3_widgets(self):
 
-        download_button = Button(self.frame3, text='Download', bg=self.black, fg=self.white,
+        download_button = Button(self.frame3, text='Download', bg='brown3', fg=self.white,relief='flat',
                                  command=lambda: self.download_video())
-        clear_button = Button(self.frame3, text='Clear', bg=self.black, fg=self.white, command=lambda: self.clear())
+        clear_button = Button(self.frame3, text='Clear',bg="gray60", fg=self.white,relief='flat',
+                              command=lambda: self.clear())
+        download_button.grid(row=0, column=0, padx=25, pady=5)
+        clear_button.grid(row=0, column=4, padx=25, pady=5)
 
-        download_button.grid(row=0, column=0, padx=15, pady=5)
-        clear_button.grid(row=0, column=6, padx=15, pady=5)
 
     def set_frame4_widgets(self):
 
         s = ttk.Style()
-        s.configure("red.Horizontal.TProgressbar", troughcolor='gray', background='dodger blue', thickness=30)
+        s.configure("red.Horizontal.TProgressbar", bd=4,relief='raised',troughcolor='white', background='tomato', thickness=30)
         self.mpb = ttk.Progressbar(self.frame4, style="red.Horizontal.TProgressbar", orient="horizontal", length=618,
                                    mode="determinate")
-        self.status = Label(self.frame4, textvariable=self.st, font=("Courier", 12), bg="gray", fg=self.black)
+        self.status = Label(self.frame4, textvariable=self.st, font=("Courier", 12), bg="white", fg=self.black,relief="flat")
 
         self.mpb.grid(row=0)
         self.mpb["maximum"] = 100
 
-    def populate(self, frame2):
-        colors = [{"fg": "black", "bg": "gray94"}, {"fg": "black", "bg": "white"}]
-        label_increment = 0
-        Label(frame2, text="\tVideo title \t\t\t\t Time", width=90, anchor="w", fg="midnight blue",
-              bg="lightsteelblue2").grid(row=label_increment, column=0)
+    def set_frame5_widgets(self):
+        Label(self.frame5, text="\tVideo title \t\t HISTORY \t\t\tTime", width=90, bd=2, fg="gray11", relief='groove',
+              anchor='w',bg="gray60").grid(row=0, column=0)
 
+    def populate(self, frame2):
+        colors = [{"fg": "black", "bg": "navajo white"}, {"fg": "black", "bg": "lemon chiffon"}]
+        label_increment = 0
         with open("/home/vikku/PycharmProjects/idm/frame2_content.txt", 'r') as f:
             for line in f:
                 list_item = line.split(",")
@@ -150,12 +165,12 @@ class Idm(Tk):
                 eval_link_left = lambda x: (lambda p: self.doleft(x))
                 eval_link_right = lambda x: (lambda p: self.doright(x))
 
-                lb = Label(frame2, text=file_info, width=90, anchor='w', wraplength=600)
+                lb = Label(frame2, text=file_info, width=90, anchor='w',bd=1.5, relief='raised',wraplength=600)
                 lb.configure(bg=seleceted_combo["bg"])
                 lb.configure(fg=seleceted_combo["fg"])
                 lb.bind("<Button-1>", eval_link_left(list_item[2].strip()))
                 lb.bind("<Button-3>", eval_link_right(list_item[3]))
-                lb.grid(row=label_increment, column=0, pady=2, padx=1)
+                lb.grid(row=label_increment-1, column=0, pady=2, padx=1)
             f.close()
 
     def changepath(self, event):
@@ -180,7 +195,7 @@ class Idm(Tk):
         try:
             self.status.grid(row=0)
             self.mpb['value'] = 0
-            self.status['bg'] = "gray"
+            self.status['bg'] = "white"
             if not self.link.get().startswith("https://www.youtube.com/"):
                 raise Exception
             self.st.set("checking for Qualities Available")
@@ -213,12 +228,18 @@ class Idm(Tk):
             stream = self.yt.streams.filter(progressive=True, file_extension='mp4')
             self.final_stream = stream
 
+            s = ttk.Style()
+            s.configure('Wild.TRadiobutton',
+                        background='white',
+                        foreground='black')
+
             for i in stream.all():
                 k = re.compile(r'\d\d\dp')
                 mo = k.search(str(i))
                 iter = mo.group()
-                iter = Radiobutton(self.frame3, text=iter, variable=self.v, value=counter)
+                iter = ttk.Radiobutton(self.frame3, text=iter, variable=self.v, value=counter,style='Wild.TRadiobutton')
                 iter.grid(row=0, column=counter + 1)
+
                 counter += 1
             self.st.set('')
 
@@ -245,9 +266,12 @@ class Idm(Tk):
         try:
             self.status.grid(row=0)
             self.img = PhotoImage(file="/home/vikku/Thumbnail.png")
-            self.status["bg"] = "gray"
+            self.status["bg"] = "white"
             self.st.set("gathering Information...")
-            self.path_variable.set(self.path_entry.get())
+            if os.path.isdir(self.path_entry.get()) or self.path_entry.get() is '':
+                self.path_variable.set(self.path_entry.get())
+            else:
+                raise Exception
             if not self.link.get().startswith("https://www.youtube.com/"):
                 raise Exception
             self.mpb['value'] = 0
@@ -258,8 +282,12 @@ class Idm(Tk):
         except Exception:
             if self.link.get() == "":
                 self.st.set("Please Enter URL")
-            else:
+            elif not self.link.get().startswith("https://www.youtube.com/"):
                 self.st.set("input valid URL")
+            elif os.path.isdir(self.path_entry.get()) is False:
+                self.st.set("Valid path Please")
+            else:
+                self.st.set("something not right")
 
     def download_thread(self, path, name):
 
@@ -308,7 +336,7 @@ class Idm(Tk):
             if self.link.get() == "":
                 self.st.set("Please Enter URL")
             else:
-                self.status["bg"] = "gray"
+                self.status["bg"] = "white"
                 # log = open("log_file.txt", 'a')
                 # log.write(format_exc())
                 # log.close()
@@ -326,9 +354,9 @@ class Idm(Tk):
         Label(self.top, image=self.img).grid(row=0, column=0, columnspan=2, padx=40)
         Label(self.top, text="Size: {}MB DOWNLOAD?".format(size), bg=self.white, pady=10, font={"arial", 22, "bold"}) \
             .grid(row=1, column=0, padx=40, columnspan=2)
-        Button(self.top, text='Yes', font={"arial", 12, "bold"},
+        Button(self.top, text='Yes', font={"arial", 12, "bold"},relief='flat',
                command=lambda: self.start_download(self.path_variable.get(), self.video)).grid(row=2, padx=40, column=0)
-        Button(self.top, text='No', font={"arial", 12, "bold"},
+        Button(self.top, text='No', font={"arial", 12, "bold"},relief='flat',
                command=lambda: self.top.destroy()).grid(row=2, column=1)
 
     def start_download(self, path, video):
@@ -338,9 +366,9 @@ class Idm(Tk):
 
     def start_download_thread(self, path, video):
         if path == '':
-            video.download('/home/vikku/Downloads/VDM/')
+            video.download('/home/vikku/Downloads/VDM/',filename=self.string_manupulation(self.yt.title))
         else:
-            video.download(path)
+            video.download(path,filename=self.string_manupulation(self.yt.title))
 
     def openFile(self, Time, title, youtube_link, path):
 
@@ -351,17 +379,23 @@ class Idm(Tk):
             modified.write(Time + ", " + title + ", " + youtube_link + ", " + path + "\n" + data)
             modified.close()
 
+
+
     def processing(self, stream, chunk, file_handle, bytes_remaining):
 
         percent = int(((self.size - bytes_remaining) / self.size) * 100)
         self.st.set(str(percent) + "%")
         self.mpb["value"] = percent
         if percent >= 49:
-            self.status["background"] = "dodger blue"
+            self.status["background"] = "tomato"
 
     def complete(self, stream, file_handle):
         try:
             if self.path_variable.get() == "":
+                if os.path.isdir('/home/vikku/Downloads/VDM'):
+                    pass
+                else:
+                    os.makedirs("/home/vikku/Downloads/VDM/")
                 absolute_path = "/home/vikku/Downloads/VDM/"
             else:
                 absolute_path = self.path_variable.get()
@@ -416,4 +450,5 @@ chpath.bind('<Button-1>',changepath)
         k = re.compile(r'\d\d\dp')
         mo = k.search(str(i))
         print(mo.group())
+https://www.youtube.com/watch?v=ub2dIkOXtPw
 '''
